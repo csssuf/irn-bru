@@ -51,7 +51,7 @@ pub(crate) fn drop(state: State<ApiState>, body: Json<DropRequest>) -> HttpRespo
         ));
     }
 
-    match machine.drop(0) {
+    match machine.drop(body.slot - 1) {
         Ok(true) => {
             let message = format!("Dropped drink from slot {}", body.slot);
             HttpResponse::Ok().json(ApiResponse::Success(ApiSuccess { message }))
