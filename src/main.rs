@@ -30,6 +30,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     server::new(move || App::with_state(api::ApiState::from_machine(machine.clone()))
             .resource("/drop", |r| r.post().with(api::drop))
+            .resource("/health", |r| r.get().with(api::health))
             .finish()
         )
         .bind(format!("{}:{}", opts.address, opts.port))?
