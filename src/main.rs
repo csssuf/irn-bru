@@ -1,4 +1,4 @@
-use actix_web::{App, http, server};
+use actix_web::{App, server};
 use structopt::StructOpt;
 
 use std::error::Error;
