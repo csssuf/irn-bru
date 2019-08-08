@@ -41,6 +41,13 @@ impl Machine {
             .collect::<Result<_, _>>()
     }
 
+    pub fn get_bus_ids(&self) -> Vec<String> {
+        self.slots
+            .iter()
+            .map(|slot| slot.device.bus_id.clone())
+            .collect()
+    }
+
     pub fn slots(&self) -> usize {
         self.slots.len()
     }
