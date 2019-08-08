@@ -1,0 +1,11 @@
+[package]
+name = "irn-bru"
+version = "0.1.0"
+authors = ["James Forcier <csssuf@csssuf.net>"]
+edition = "2018"
+
+[dependencies]
+actix-web = "0.7"
+serde = { version = "1.0", features = ["derive"] }
+structopt = "0.2"
+toml = "0.5"
