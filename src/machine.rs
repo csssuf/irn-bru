@@ -9,6 +9,7 @@ use crate::config::MachineConfig;
 #[derive(Debug, Clone)]
 pub struct Machine {
     slots: Vec<Slot>,
+    sensor: TemperatureSensor,
 }
 
 impl Machine {
@@ -18,8 +19,11 @@ impl Machine {
         let slots = config.slot_addresses.into_iter()
             .map(|id| Slot::from_components(mountpoint.clone(), id, timing))
             .collect::<Vec<_>>();
+        let sensor = TemperatureSensor {
+            device: OnewireDevice::from_components(mountpoint.clone(), config.temp_address),
+        };
 
-        Machine { slots }
+        Machine { slots, sensor }
     }
 
     pub fn drop(&mut self, slot_idx: usize) -> Result<bool, Box<dyn Error>> {
@@ -39,6 +43,10 @@ impl Machine {
 
     pub fn slots(&self) -> usize {
         self.slots.len()
+    }
+
+    pub fn get_temperature(&self) -> Result<f32, Box<dyn Error>> {
+        self.sensor.get_temperature()
     }
 }
 
@@ -68,6 +76,19 @@ impl Slot {
             }
             false => Ok(false),
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct TemperatureSensor {
+    device: OnewireDevice,
+}
+
+impl TemperatureSensor {
+    fn get_temperature(&self) -> Result<f32, Box<dyn Error>> {
+        let temp_s = self.device.read_property("temperature12")?;
+        let temp = temp_s.parse::<f32>()?;
+        Ok(temp * (9.0/5.0) + 32.0)
     }
 }
 
