@@ -2,6 +2,7 @@ use actix_web::{http, server,  App, HttpResponse, Json, State};
 use serde::{Deserialize, Serialize};
 
 use std::cell::RefCell;
+use std::error::Error;
 
 use crate::machine::Machine;
 
@@ -40,29 +41,32 @@ pub(crate) struct DropRequest {
 }
 
 pub(crate) fn drop(state: State<ApiState>, body: Json<DropRequest>) -> HttpResponse {
-    let mut machine = state.machine.borrow_mut();
-
-    if body.slot == 0 || body.slot > machine.slots() {
-        return HttpResponse::BadRequest()
-            .json(ApiResponse::Error(ApiError {
-                error: "Bad slot number".to_owned(),
-                error_code: 400,
-            }
-        ));
-    }
-
-    match machine.drop(body.slot - 1) {
-        Ok(true) => {
-            let message = format!("Dropped drink from slot {}", body.slot);
-            HttpResponse::Ok().json(ApiResponse::Success(ApiSuccess { message }))
-        }
-        Ok(false) => {
-            let error = format!("Slot {} disabled", body.slot);
-            HttpResponse::ServiceUnavailable().json(ApiResponse::Error(ApiError { error, error_code: 503 }))
-        },
+    match drop_impl(state, body) {
+        Ok(response) => response,
         Err(e) => {
             let error = format!("error: {:?}", e);
             HttpResponse::InternalServerError().json(ApiResponse::Error(ApiError { error, error_code: 500 }))
         }
+    }
+}
+
+fn drop_impl(state: State<ApiState>, body: Json<DropRequest>) -> Result<HttpResponse, Box<dyn Error>> {
+    let mut machine = state.machine.borrow_mut();
+
+    if body.slot == 0 || body.slot > machine.slots() {
+        return Ok(HttpResponse::BadRequest()
+            .json(ApiResponse::Error(ApiError {
+                error: "Bad slot number".to_owned(),
+                error_code: 400,
+            }
+        )));
+    }
+
+    if machine.drop(body.slot - 1)? {
+        let message = format!("Dropped drink from slot {}", body.slot);
+        Ok(HttpResponse::Ok().json(ApiResponse::Success(ApiSuccess { message })))
+    } else {
+        let error = format!("Slot {} disabled", body.slot);
+        Ok(HttpResponse::ServiceUnavailable().json(ApiResponse::Error(ApiError { error, error_code: 503 })))
     }
 }
