@@ -17,27 +17,19 @@ impl ApiState {
 }
 
 #[derive(Clone, Debug, Serialize)]
-#[serde(untagged)]
-enum ApiResponse {
-    Error(ApiError),
-    Success(ApiSuccess),
-    Health(ApiHealth),
-}
-
-#[derive(Clone, Debug, Serialize)]
-struct ApiSuccess {
+struct SuccessResponse {
     message: String,
 }
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct ApiError {
+pub(crate) struct ErrorResponse {
     pub(crate) error: String,
     pub(crate) error_code: u16,
 }
 
 #[derive(Clone, Debug, Serialize)]
-struct ApiHealth {
+struct HealthResponse {
     slots: Vec<String>,
     temp: f32,
 }
@@ -52,7 +44,7 @@ pub(crate) fn drop(state: State<ApiState>, body: Json<DropRequest>) -> HttpRespo
         Ok(response) => response,
         Err(e) => {
             let error = format!("error: {:?}", e);
-            HttpResponse::InternalServerError().json(ApiResponse::Error(ApiError { error, error_code: 500 }))
+            HttpResponse::InternalServerError().json(ErrorResponse { error, error_code: 500 })
         }
     }
 }
@@ -62,19 +54,19 @@ fn drop_impl(state: State<ApiState>, body: Json<DropRequest>) -> Result<HttpResp
 
     if body.slot == 0 || body.slot > machine.slots() {
         return Ok(HttpResponse::BadRequest()
-            .json(ApiResponse::Error(ApiError {
+            .json(ErrorResponse {
                 error: "Bad slot number".to_owned(),
                 error_code: 400,
             }
-        )));
+        ));
     }
 
     if machine.drop(body.slot - 1)? {
         let message = format!("Dropped drink from slot {}", body.slot);
-        Ok(HttpResponse::Ok().json(ApiResponse::Success(ApiSuccess { message })))
+        Ok(HttpResponse::Ok().json(SuccessResponse { message }))
     } else {
         let error = format!("Slot {} disabled", body.slot);
-        Ok(HttpResponse::ServiceUnavailable().json(ApiResponse::Error(ApiError { error, error_code: 503 })))
+        Ok(HttpResponse::ServiceUnavailable().json(ErrorResponse { error, error_code: 503 }))
     }
 }
 
@@ -83,7 +75,7 @@ pub(crate) fn health(state: State<ApiState>) -> HttpResponse {
         Ok(response) => response,
         Err(e) => {
             let error = format!("error: {:?}", e);
-            HttpResponse::InternalServerError().json(ApiResponse::Error(ApiError { error, error_code: 500 }))
+            HttpResponse::InternalServerError().json(ErrorResponse { error, error_code: 500 })
         }
     }
 }
@@ -105,5 +97,5 @@ fn health_impl(state: State<ApiState>) -> Result<HttpResponse, Box<dyn Error>> {
             }
         })
         .collect();
-    Ok(HttpResponse::Ok().json(ApiResponse::Health(ApiHealth { slots, temp })))
+    Ok(HttpResponse::Ok().json(HealthResponse { slots, temp }))
 }

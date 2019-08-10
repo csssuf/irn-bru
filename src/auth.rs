@@ -4,7 +4,7 @@ use actix_web::{
     middleware::{Middleware, Started},
 };
 
-use crate::api::ApiError;
+use crate::api::ErrorResponse;
 
 #[derive(Clone, Debug)]
 pub(crate) struct ApiKeyAuth(pub(crate) String);
@@ -17,7 +17,7 @@ impl<S: 'static> Middleware<S> for ApiKeyAuth {
             }
         }
 
-        let error = ApiError {
+        let error = ErrorResponse {
             error: "Invalid credentials".to_owned(),
             error_code: 401,
         };
