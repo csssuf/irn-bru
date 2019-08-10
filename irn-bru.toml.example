@@ -1,0 +1,17 @@
+[machine]
+name = "bigdrink"
+slot_addresses = [
+    "05.190D0E000000",
+    "05.80070E000000",
+    "05.19060E000000",
+    "05.61FF0D000000",
+    "05.4A010E000000",
+    "05.7E010E000000",
+    "05.D9030E000000"
+]
+temp_address = "28.D47E0C000000"
+drop_timing = 500
+owfs_mountpoint = "/mnt/owfs"
+
+[api]
+api_key = "my_cool_api_key_here"
