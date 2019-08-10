@@ -8,7 +8,7 @@ use std::path::PathBuf;
 #[derive(Deserialize, Clone, Debug)]
 pub(crate) struct IrnBruConfig {
     pub(crate) machine: MachineConfig,
-    api: ApiConfig,
+    pub(crate) api: ApiConfig,
 }
 
 #[derive(Deserialize, Clone, Debug)]
