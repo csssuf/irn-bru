@@ -1,7 +1,7 @@
 use actix_web::{
-    HttpRequest, HttpResponse,
     error::Result,
     middleware::{Middleware, Started},
+    HttpRequest, HttpResponse,
 };
 
 use crate::api::ErrorResponse;

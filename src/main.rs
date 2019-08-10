@@ -1,4 +1,4 @@
-use actix_web::{actix::System, App, server};
+use actix_web::{actix::System, server, App};
 use structopt::StructOpt;
 
 use std::error::Error;
@@ -32,14 +32,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let system = System::new("irn-bru");
 
-    server::new(move || App::with_state(api::ApiState::from_machine(machine.clone()))
+    server::new(move || {
+        App::with_state(api::ApiState::from_machine(machine.clone()))
             .middleware(auth.clone())
             .resource("/drop", |r| r.post().with(api::drop))
             .resource("/health", |r| r.get().with(api::health))
             .finish()
-        )
-        .bind(format!("{}:{}", opts.address, opts.port))?
-        .start();
+    })
+    .bind(format!("{}:{}", opts.address, opts.port))?
+    .start();
 
     system.run();
 

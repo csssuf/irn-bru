@@ -16,7 +16,9 @@ impl Machine {
     pub fn from_components(config: MachineConfig) -> Machine {
         let mountpoint: PathBuf = config.owfs_mountpoint.into();
         let timing = config.drop_timing;
-        let slots = config.slot_addresses.into_iter()
+        let slots = config
+            .slot_addresses
+            .into_iter()
             .map(|id| Slot::from_components(mountpoint.clone(), id, timing))
             .collect::<Vec<_>>();
         let sensor = TemperatureSensor {
@@ -65,7 +67,10 @@ struct Slot {
 
 impl Slot {
     fn from_components(owfs_mountpoint: PathBuf, bus_id: String, timing_ms: u64) -> Slot {
-        Slot { device: OnewireDevice::from_components(owfs_mountpoint, bus_id), timing_ms }
+        Slot {
+            device: OnewireDevice::from_components(owfs_mountpoint, bus_id),
+            timing_ms,
+        }
     }
 
     fn get_active(&self) -> Result<bool, Box<dyn Error>> {
@@ -95,7 +100,7 @@ impl TemperatureSensor {
     fn get_temperature(&self) -> Result<f32, Box<dyn Error>> {
         let temp_s = self.device.read_property("temperature12")?;
         let temp = temp_s.parse::<f32>()?;
-        Ok(temp * (9.0/5.0) + 32.0)
+        Ok(temp * (9.0 / 5.0) + 32.0)
     }
 }
 
