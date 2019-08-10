@@ -31,9 +31,9 @@ struct ApiSuccess {
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-struct ApiError {
-    error: String,
-    error_code: u16,
+pub(crate) struct ApiError {
+    pub(crate) error: String,
+    pub(crate) error_code: u16,
 }
 
 #[derive(Clone, Debug, Serialize)]
