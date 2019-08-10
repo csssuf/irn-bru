@@ -99,7 +99,7 @@ struct TemperatureSensor {
 impl TemperatureSensor {
     fn get_temperature(&self) -> Result<f32, Box<dyn Error>> {
         let temp_s = self.device.read_property("temperature12")?;
-        let temp = temp_s.parse::<f32>()?;
+        let temp = temp_s.trim().parse::<f32>()?;
         Ok(temp * (9.0 / 5.0) + 32.0)
     }
 }
