@@ -1,4 +1,6 @@
 use actix_web::{actix::System, server, App};
+use env_logger::Env;
+use log::{debug, info, trace, warn};
 use structopt::StructOpt;
 
 use std::error::Error;
@@ -24,13 +26,22 @@ struct IrnBruCli {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let log_env = Env::default()
+        .default_filter_or("info");
+    env_logger::init_from_env(log_env);
+
     let opts = IrnBruCli::from_args();
 
     let config = config::read_config(opts.config_path)?;
+    trace!("config: {:?}", config);
     let auth = auth::ApiKeyAuth(config.api.api_key.clone());
+    debug!("API key: {}", config.api.api_key);
     let machine = machine::Machine::from_components(config.machine);
+    trace!("machine: {:?}", machine);
 
     let system = System::new("irn-bru");
+
+    info!("Listening on {}:{}", opts.address, opts.port);
 
     server::new(move || {
         App::with_state(api::ApiState::from_machine(machine.clone()))
