@@ -1,3 +1,5 @@
+use log::{debug, trace};
+
 use std::error::Error;
 use std::fs;
 use std::path::PathBuf;
@@ -33,6 +35,7 @@ impl Machine {
             return Err(format!("slot index {} out of range", slot_idx).into());
         }
 
+        debug!("Dropping slot {}", slot_idx);
         self.slots[slot_idx].drop()
     }
 
@@ -81,8 +84,10 @@ impl Slot {
     fn drop(&mut self) -> Result<bool, Box<dyn Error>> {
         match self.get_active()? {
             true => {
+                debug!("Enabling motors for slot {}", self.device.bus_id);
                 self.device.write_property("PIO", "1")?;
                 thread::sleep(Duration::from_millis(self.timing_ms));
+                debug!("Disabling motors for slot {}", self.device.bus_id);
                 self.device.write_property("PIO", "0")?;
                 Ok(true)
             }
@@ -99,6 +104,7 @@ struct TemperatureSensor {
 impl TemperatureSensor {
     fn get_temperature(&self) -> Result<f32, Box<dyn Error>> {
         let temp_s = self.device.read_property("temperature12")?;
+        trace!("raw temperature value: {}", temp_s);
         let temp = temp_s.trim().parse::<f32>()?;
         Ok(temp * (9.0 / 5.0) + 32.0)
     }
@@ -123,13 +129,17 @@ impl OnewireDevice {
     }
 
     fn read_property(&self, name: &str) -> Result<String, Box<dyn Error>> {
+        trace!("reading property {}", name);
         let property_path = self.fs_path.join(name);
+        trace!("property_path: {:?}", property_path);
         let property = fs::read_to_string(&property_path)?;
         Ok(property)
     }
 
     fn write_property(&mut self, name: &str, value: &str) -> Result<(), Box<dyn Error>> {
+        trace!("writing property \"{}\" with value {}", name, value);
         let property_path = self.fs_path.join(name);
+        trace!("property_path: {:?}", property_path);
         fs::write(&property_path, value)?;
         Ok(())
     }
