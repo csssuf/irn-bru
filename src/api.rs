@@ -1,4 +1,5 @@
 use actix_web::{HttpResponse, Json, State};
+use log::{debug, trace};
 use serde::{Deserialize, Serialize};
 
 use std::cell::RefCell;
@@ -58,14 +59,19 @@ fn drop_impl(
     state: State<ApiState>,
     body: Json<DropRequest>,
 ) -> Result<HttpResponse, Box<dyn Error>> {
+    trace!("Drop request body: {:?}", body);
     let mut machine = state.machine.borrow_mut();
+    trace!("machine state: {:?}", machine);
 
     if body.slot == 0 || body.slot > machine.slots() {
+        debug!("ignoring bad drop attempt for slot {}", body.slot);
         return Ok(HttpResponse::BadRequest().json(ErrorResponse {
             error: "Bad slot number".to_owned(),
             error_code: 400,
         }));
     }
+
+    debug!("attempting to drop API slot {} (machine slot {})", body.slot, body.slot - 1);
 
     if machine.drop(body.slot - 1)? {
         let message = format!("Dropped drink from slot {}", body.slot);
@@ -93,7 +99,9 @@ pub(crate) fn health(state: State<ApiState>) -> HttpResponse {
 }
 
 fn health_impl(state: State<ApiState>) -> Result<HttpResponse, Box<dyn Error>> {
+    debug!("/health called");
     let machine = state.machine.borrow();
+    trace!("machine state: {:?}", machine);
 
     let temp = machine.get_temperature()?;
     let bus_ids = machine.get_bus_ids();
