@@ -35,7 +35,7 @@ impl Machine {
             return Err(format!("slot index {} out of range", slot_idx).into());
         }
 
-        debug!("Dropping slot {}", slot_idx);
+        debug!("Attempting to drop slot {}", slot_idx);
         self.slots[slot_idx].drop()
     }
 
@@ -91,7 +91,10 @@ impl Slot {
                 self.device.write_property("PIO", "0")?;
                 Ok(true)
             }
-            false => Ok(false),
+            false => {
+                debug!("Slot {} disabled, not performing drop", self.device.bus_id);
+                Ok(false)
+            }
         }
     }
 }
